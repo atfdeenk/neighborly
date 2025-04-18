@@ -31,6 +31,27 @@
 
 ---
 
+## Mockups
+Below are the main UI mockups for Neighborly. These illustrate the core user flows and design direction:
+
+**User Authentication & Authorization**
+
+![User Authentication & Authorization](mockup/User%20Authentication%20&%20Authorization.png)
+
+**Landing Page & Market Discovery**
+
+![Landing Page](mockup/Landing%20Page.png)
+
+**Product Details Page**
+
+![Product Details Page](mockup/Product%20Details%20Page.png)
+
+**Cart & Checkout Page**
+
+![Cart & Checkout Page](mockup/Cart%20&%20Checkout%20Page.png)
+
+---
+
 ## Features
 - User authentication and role-based authorization (Consumers & Sellers)
 - Market discovery and product browsing with filters, search, and pagination
