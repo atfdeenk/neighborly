@@ -1,9 +1,7 @@
 'use client';
 
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Navbar from "../components/Navbar";
-import { Suspense } from "react";
 import FlashSaleTimer from "../components/FlashSaleTimer";
 import Footer from "../components/Footer";
 import CategoryMenu from "../components/CategoryMenu";
@@ -11,6 +9,8 @@ import ProductGrid from "../components/ProductGrid";
 import ProductCard from "../components/ProductCard";
 import Testimonials from "../components/Testimonials";
 import { fetchProducts } from "../lib/api";
+import { getRecommendedProducts, getSearchHistory } from "../utils/searchHistory";
+import "../styles/arrowPulse.css";
 
 const bannerImages = [
   // Vibrant farmers market with fresh produce and local sellers
@@ -101,12 +101,11 @@ const sellerOfTheWeek = {
   ]
 };
 
-import { useRef } from "react";
-import "../styles/arrowPulse.css";
-
 function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<any[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+  const [hasSearchHistory, setHasSearchHistory] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [flashSaleStartIdx, setFlashSaleStartIdx] = useState(0);
   const flashSaleVisibleCount = 3;
@@ -165,7 +164,7 @@ function Home() {
   }
 
   useEffect(() => {
-    fetchProducts().then((data) => {
+    fetchProducts().then(data => {
       // Assign 'featured' to a few products if not present
       let featuredCount = 0;
       const withFeatured = data.map((p: any, idx: number) => {
@@ -177,9 +176,22 @@ function Home() {
         }
         return { ...p, featured: false };
       });
+      
       setProducts(withFeatured);
+      
+      // Use products for flash sale
       const flashSaleCount = Math.min(20, withFeatured.length);
-      setFlashSaleProducts(shuffleArray(withFeatured).slice(0, flashSaleCount));
+      setFlashSaleProducts(shuffleArray([...withFeatured]).slice(0, flashSaleCount));
+      
+      // Check if user has search history and generate recommendations
+      if (typeof window !== 'undefined') {
+        const searchHistory = getSearchHistory();
+        setHasSearchHistory(searchHistory.length > 0);
+        
+        // Get recommended products based on search history
+        const recommended = getRecommendedProducts(withFeatured, 8);
+        setRecommendedProducts(recommended);
+      }
     });
   }, []);
 
@@ -197,170 +209,406 @@ function Home() {
         <Navbar />
       </Suspense>
 
-      {/* Hero Banner - Fullscreen, Modern, Community & Pro-Local */}
-      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden mb-10">
-        <img
-          src={bannerImages[bannerIdx]}
-          alt="Banner"
-          className="absolute inset-0 w-full h-full object-cover object-center z-0 transition-opacity duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#3E7C59]/80 via-black/50 to-transparent z-10" />
-        <div className="relative z-20 w-full flex justify-center items-center min-h-screen px-2">
-          <div className="bg-white/90 rounded-3xl shadow-2xl px-6 py-8 sm:px-12 sm:py-14 max-w-2xl mx-auto flex flex-col items-center text-center gap-4 border border-primary/10 backdrop-blur-md">
-            {/* Ribbon Badge */}
-            <div className="flex justify-center mb-2">
-              <span className="inline-flex items-center gap-2 bg-primary/90 text-black font-bold px-4 py-1.5 rounded-full shadow text-xs sm:text-sm uppercase tracking-widest border-2 border-white/80">
-                <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 01.894.553l1.382 2.802 3.093.45a1 1 0 01.554 1.706l-2.237 2.182.528 3.08a1 1 0 01-1.451 1.054L10 12.347l-2.773 1.46A1 1 0 015.776 12.76l.528-3.08-2.237-2.182a1 1 0 01.554-1.706l3.093-.45L9.106 2.553A1 1 0 0110 2z" /></svg>
-                For Local Sellers & Shoppers
-              </span>
+      {/* Hero Section - Modern Etsy-inspired */}
+      <section className="w-full mb-6">
+        
+        {/* Hero Banner with Seasonal Collections */}
+        <div className="relative overflow-hidden bg-[#F8F5F2] pt-8 pb-16">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="md:flex items-center gap-8">
+              {/* Left Content */}
+              <div className="md:w-1/2 mb-8 md:mb-0">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">
+                  Discover Sustainable <span className="text-[#3E7C59]">Local Treasures</span>
+                </h1>
+                <p className="text-gray-600 text-lg mb-8">
+                  Shop from artisans, farmers, and creators in your community offering eco-friendly, handcrafted goods.
+                </p>
+                
+                <div className="flex flex-wrap gap-3 mb-8">
+                  <a href="/sustainable" className="bg-[#3E7C59] hover:bg-[#2D5B41] text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200">
+                    Shop Sustainable
+                  </a>
+                  <a href="/sellers" className="bg-white text-gray-800 font-medium px-6 py-3 rounded-lg border border-gray-300 hover:border-[#3E7C59] hover:text-[#3E7C59] transition-colors duration-200">
+                    Meet Our Sellers
+                  </a>
+                </div>
+                
+                {/* Trust Badges */}
+                <div className="flex flex-wrap gap-x-6 gap-y-3">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <svg className="w-5 h-5 mr-2 text-[#3E7C59]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Verified Local Sellers
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <svg className="w-5 h-5 mr-2 text-[#3E7C59]" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    4.8 Marketplace Rating
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <svg className="w-5 h-5 mr-2 text-[#3E7C59]" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    Secure Transactions
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Content - Seasonal Collections */}
+              <div className="md:w-1/2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div className="rounded-lg overflow-hidden group relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1556911220-bda9f7b7e482?auto=format&fit=crop&w=600&q=80" 
+                        alt="Spring Collection" 
+                        className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-white font-medium">Spring Collection</h3>
+                      </div>
+                    </div>
+                    <div className="rounded-lg overflow-hidden group relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=600&q=80" 
+                        alt="Summer Essentials" 
+                        className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-white font-medium">Summer Essentials</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4 mt-6">
+                    <div className="rounded-lg overflow-hidden group relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1592921870583-aeafb0639ffe?auto=format&fit=crop&w=600&q=80" 
+                        alt="Home Decor" 
+                        className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-white font-medium">Home Decor</h3>
+                      </div>
+                    </div>
+                    <div className="rounded-lg overflow-hidden group relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1584589167171-541ce45f1eea?auto=format&fit=crop&w=600&q=80" 
+                        alt="Sustainable Gifts" 
+                        className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-white font-medium">Sustainable Gifts</h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            {/* Headline */}
-            <h1 className="text-3xl sm:text-5xl font-extrabold text-[#3E7C59] mb-2 leading-tight tracking-tight drop-shadow-lg">
-              Where Community <span className="text-primary">Thrives</span><br className="hidden sm:inline" /> & Locals Shine
-            </h1>
-            {/* Subheadline */}
-            <p className="text-gray-800 text-lg sm:text-xl mb-2 max-w-xl">
-              Welcome to Neighborly—your friendly marketplace for discovering unique, eco-friendly products and supporting passionate local sellers.
-            </p>
-            {/* Avatar Group / Community Icons */}
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Community member" className="w-8 h-8 rounded-full border-2 border-primary/60 shadow" />
-              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Community member" className="w-8 h-8 rounded-full border-2 border-primary/60 shadow -ml-2" />
-              <img src="https://randomuser.me/api/portraits/men/65.jpg" alt="Community member" className="w-8 h-8 rounded-full border-2 border-primary/60 shadow -ml-2" />
-              <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Community member" className="w-8 h-8 rounded-full border-2 border-primary/60 shadow -ml-2" />
-              <span className="ml-2 text-xs text-gray-600 font-semibold">+ your neighbors</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Discover Gifts for Every Occasion - Etsy-inspired */}
+      <section id="categories" className="py-16 px-4 max-w-6xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Discover Gifts for Every Occasion</h2>
+            <p className="text-gray-500">Unique, sustainable treasures for everyone on your list</p>
+          </div>
+          <a href="/categories" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
+            See all categories
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {/* Gift Categories - Etsy-inspired cards */}
+          <a href="/products?category=Home%20%26%20Living" className="group relative rounded-lg overflow-hidden">
+            <div className="aspect-square relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80" 
+                alt="Home & Living" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="text-white font-medium text-lg">Home & Living</h3>
+                <p className="text-white/80 text-sm">Sustainable decor & essentials</p>
+              </div>
             </div>
-            {/* Principle Badges */}
-            <div className="flex flex-wrap justify-center gap-3 mb-7">
-              <span className="flex items-center gap-2 bg-[#E8F5E9] text-[#388E3C] font-semibold px-4 py-2 rounded-full shadow">
-                <svg className="w-5 h-5 text-[#388E3C]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 2.5 1.5 5.5 5.5 9 4-3.5 5.5-6.5 5.5-9C21.5 6.03 16.97 2 12 2z" /></svg>
-                Sustainable
-              </span>
-              <span className="flex items-center gap-2 bg-[#E3F2FD] text-[#1976D2] font-semibold px-4 py-2 rounded-full shadow">
-                <svg className="w-5 h-5 text-[#1976D2]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M8 14s1.5 2 4 2 4-2 4-2" /></svg>
-                Community
-              </span>
-              <span className="flex items-center gap-2 bg-[#FFF8E1] text-[#F9A825] font-semibold px-4 py-2 rounded-full shadow">
-                <svg className="w-5 h-5 text-[#F9A825]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m4-8v8m-4 0h4" /></svg>
-                Local
-              </span>
+          </a>
+          
+          <a href="/products?category=Fashion" className="group relative rounded-lg overflow-hidden">
+            <div className="aspect-square relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=600&q=80" 
+                alt="Fashion" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="text-white font-medium text-lg">Fashion</h3>
+                <p className="text-white/80 text-sm">Handcrafted, ethical clothing</p>
+              </div>
             </div>
-            {/* CTA Button */}
-            <a
-              href="#categories"
-              className="inline-flex items-center gap-2 bg-primary text-black font-extrabold px-8 py-4 rounded-full shadow-lg hover:bg-success/90 transition text-lg tracking-wide border-2 border-primary/30 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              style={{ letterSpacing: '.04em' }}
-            >
-              <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-              Start Exploring Your Community
+          </a>
+          
+          <a href="/products?category=Groceries" className="group relative rounded-lg overflow-hidden">
+            <div className="aspect-square relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80" 
+                alt="Groceries" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="text-white font-medium text-lg">Groceries</h3>
+                <p className="text-white/80 text-sm">Local, organic food & produce</p>
+              </div>
+            </div>
+          </a>
+          
+          <a href="/products?category=Beauty" className="group relative rounded-lg overflow-hidden">
+            <div className="aspect-square relative overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1571875257727-256c39da42af?auto=format&fit=crop&w=600&q=80" 
+                alt="Beauty" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <h3 className="text-white font-medium text-lg">Beauty</h3>
+                <p className="text-white/80 text-sm">Natural, cruelty-free products</p>
+              </div>
+            </div>
+          </a>
+        </div>
+        
+        {/* Occasion-based Categories */}
+        <div className="mt-10">
+          <h3 className="text-xl font-bold text-gray-800 mb-5">Shop by Occasion</h3>
+          <div className="flex overflow-x-auto scrollbar-hide space-x-4 py-2 px-1 -mx-1">
+            <a href="/occasion/birthday" className="min-w-[160px] max-w-[160px] rounded-lg overflow-hidden group">
+              <div className="aspect-[4/3] relative overflow-hidden bg-[#F8F5F2]">
+                <img 
+                  src="https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=400&q=80" 
+                  alt="Birthday Gifts" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="py-2 text-center">
+                <h4 className="font-medium text-gray-800 group-hover:text-[#3E7C59] transition-colors duration-200">Birthday</h4>
+              </div>
+            </a>
+            
+            <a href="/occasion/housewarming" className="min-w-[160px] max-w-[160px] rounded-lg overflow-hidden group">
+              <div className="aspect-[4/3] relative overflow-hidden bg-[#F8F5F2]">
+                <img 
+                  src="https://images.unsplash.com/photo-1556020685-ae41abfc9365?auto=format&fit=crop&w=400&q=80" 
+                  alt="Housewarming Gifts" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="py-2 text-center">
+                <h4 className="font-medium text-gray-800 group-hover:text-[#3E7C59] transition-colors duration-200">Housewarming</h4>
+              </div>
+            </a>
+            
+            <a href="/occasion/wedding" className="min-w-[160px] max-w-[160px] rounded-lg overflow-hidden group">
+              <div className="aspect-[4/3] relative overflow-hidden bg-[#F8F5F2]">
+                <img 
+                  src="https://images.unsplash.com/photo-1522673607200-164d1b3ce551?auto=format&fit=crop&w=400&q=80" 
+                  alt="Wedding Gifts" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="py-2 text-center">
+                <h4 className="font-medium text-gray-800 group-hover:text-[#3E7C59] transition-colors duration-200">Wedding</h4>
+              </div>
+            </a>
+            
+            <a href="/occasion/holiday" className="min-w-[160px] max-w-[160px] rounded-lg overflow-hidden group">
+              <div className="aspect-[4/3] relative overflow-hidden bg-[#F8F5F2]">
+                <img 
+                  src="https://images.unsplash.com/photo-1512909006721-3d6018887383?auto=format&fit=crop&w=400&q=80" 
+                  alt="Holiday Gifts" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="py-2 text-center">
+                <h4 className="font-medium text-gray-800 group-hover:text-[#3E7C59] transition-colors duration-200">Holiday</h4>
+              </div>
+            </a>
+            
+            <a href="/occasion/anniversary" className="min-w-[160px] max-w-[160px] rounded-lg overflow-hidden group">
+              <div className="aspect-[4/3] relative overflow-hidden bg-[#F8F5F2]">
+                <img 
+                  src="https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=400&q=80" 
+                  alt="Anniversary Gifts" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="py-2 text-center">
+                <h4 className="font-medium text-gray-800 group-hover:text-[#3E7C59] transition-colors duration-200">Anniversary</h4>
+              </div>
             </a>
           </div>
         </div>
       </section>
 
-      {/* Shop by Category */}
-      <section id="categories" className="mb-10">
-        <h2 className="text-xl sm:text-2xl font-bold text-center mb-5">Shop by Category</h2>
-        <CategoryMenu />
-      </section>
-
-      {/* Featured Products */}
-      <section id="featured" className="py-8 px-4 max-w-6xl mx-auto w-full">
-        <h2 className="text-2xl font-bold text-black mb-6">Featured Products</h2>
-        <ProductGrid
-          products={products.filter((p: any) => p.featured).length > 0
+      {/* Picks Inspired by Your Shopping - Etsy-inspired */}
+      <section id="featured" className="py-16 px-4 max-w-6xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Picks Inspired by Your Shopping</h2>
+            <p className="text-gray-500">Personalized recommendations based on your browsing</p>
+          </div>
+          <div className="mt-3 md:mt-0 flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
+                aria-label="Previous recommendations"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button
+                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
+                aria-label="Next recommendations"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+            <a href="/products" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
+              See all picks
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        
+        {/* Recommendation Categories */}
+        <div className="flex overflow-x-auto scrollbar-hide space-x-3 py-2 px-1 -mx-1 mb-6">
+          <button className="whitespace-nowrap bg-[#3E7C59] text-white text-sm font-medium px-4 py-2 rounded-full">
+            For You
+          </button>
+          <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+            Based on Your Searches
+          </button>
+          <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+            Similar to Items You've Viewed
+          </button>
+          <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+            From Shops You Follow
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
+          {(products.filter((p: any) => p.featured).length > 0
             ? products.filter((p: any) => p.featured).slice(0,8)
             : products.slice(0,8)
-          }
-          gridCols="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
-          showCategoryTag={true}
-          showOldPrice={false}
-        />
-        <div className="flex justify-center mt-8">
+          ).map((product: any) => (
+            <div key={product.id} className="group">
+              <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
+                <img 
+                  src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80'} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                {product.category && (
+                  <span className="absolute top-2 left-2 bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
+                    {product.category}
+                  </span>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                <div className="absolute bottom-3 right-3 flex space-x-2">
+                  <button 
+                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+                    aria-label={`Add ${product.name} to favorites`}
+                  >
+                    <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                  <button 
+                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75"
+                    aria-label={`Add ${product.name} to cart`}
+                  >
+                    <svg className="w-5 h-5 text-gray-600 hover:text-[#3E7C59] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="px-1">
+                <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold text-gray-900">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
+                  </span>
+                  <div className="flex items-center text-amber-400 text-xs">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span className="ml-1 text-xs text-gray-500">4.8</span>
+                  </div>
+                </div>
+                {product.seller && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-500 truncate">By {product.seller}</span>
+                    {Math.random() > 0.5 && (
+                      <span className="ml-2 text-xs text-[#3E7C59] font-medium">FREE shipping</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex justify-center mt-10">
           <a
             href="/products"
-            className="bg-primary text-black font-bold px-8 py-3 rounded-full shadow-lg hover:bg-primary/90 transition text-lg"
+            className="bg-white text-gray-800 font-medium px-8 py-3.5 rounded-full border border-gray-300 hover:border-[#3E7C59] hover:text-[#3E7C59] transition-all duration-200 shadow-sm hover:shadow"
           >
             Browse All Products
           </a>
         </div>
       </section>
 
-      {/* Flash Sale Section */}
-      <section className="py-10 px-4 max-w-6xl mx-auto w-full">
-        <h2 className="text-xl sm:text-2xl font-bold text-black mb-5">Flash Sale</h2>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <span
-              className="flex items-center bg-[#4C6B4F] text-white text-base px-5 py-2 rounded-full font-bold shadow-md tracking-wide uppercase"
-              style={{ letterSpacing: "0.08em" }}
-            >
-              <svg
-                className="w-5 h-5 mr-2 text-yellow-300"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M11.3 1.046a1 1 0 00-1.8 0l-7 14A1 1 0 003.3 17h5.1l-1.4 2.8a1 1 0 001.8 1l7-14A1 1 0 0016.7 3h-5.1l1.4-2.8z" />
-              </svg>
-              FLASH SALE
-            </span>
-            <FlashSaleTimer key={timerKey} onReset={handleTimerReset} />
-          </div>
-          <div className="hidden sm:flex gap-2">
-            <button
-              className={`arrow-pulse bg-white border border-[#7BAE7F]/50 shadow-lg rounded-full p-3 transition-all duration-300 disabled:opacity-40 active:scale-90 focus:outline-none focus:ring-2 focus:ring-[#7BAE7F] hover:ring-2 hover:ring-[#7BAE7F]/40 hover:bg-[#F4FBF5] ${lastUsedArrow === 'prev' ? 'scale-125 z-10' : 'scale-100'}`}
-              onClick={handleFlashSalePrev}
-              aria-label="Previous"
-              disabled={flashSaleStartIdx === 0}
-            >
-              <svg className="arrow-svg w-7 h-7 text-primary transition-transform duration-200 active:-translate-x-1 drop-shadow-sm" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            </button>
-            <button
-              className={`arrow-pulse bg-white border border-[#7BAE7F]/50 shadow-lg rounded-full p-3 transition-all duration-300 disabled:opacity-40 active:scale-90 focus:outline-none focus:ring-2 focus:ring-[#7BAE7F] hover:ring-2 hover:ring-[#7BAE7F]/40 hover:bg-[#F4FBF5] ${lastUsedArrow === 'next' ? 'scale-125 z-10' : 'scale-100'}`}
-              onClick={handleFlashSaleNext}
-              aria-label="Next"
-              disabled={flashSaleStartIdx + flashSaleVisibleCount >= flashSaleProducts.length}
-            >
-              <svg className="arrow-svg w-7 h-7 text-primary transition-transform duration-200 active:translate-x-1 drop-shadow-sm" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        {/* Flash Sale Horizontal Carousel */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          {/* Flash Sale Carousel: Transform only on desktop, native scroll on mobile */}
-          <div
-            className="flex gap-3 sm:gap-4 md:gap-6 py-2 min-h-[210px] sm:min-h-[270px] md:min-h-[330px] transition-transform duration-500 ease-in-out"
-            style={carouselTransformStyle}
-          >
-            {flashSaleProducts.map((product: any, idx: number) => (
-              <div key={product.id + '-' + idx} className="min-w-[180px] max-w-[180px] sm:min-w-[240px] sm:max-w-[240px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0">
-                <ProductCard
-                  product={product}
-                  showCategoryTag={true}
-                  showOldPrice={true}
-                  tagLabel="Flash Sale"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Visual Separator */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="border-t border-gray-200 my-4"></div>
+      </div>
 
-      {/* Recently Viewed/Recommended Section */}
-      <section className="py-16 px-4 max-w-6xl mx-auto w-full bg-[#F8F7F4] rounded-3xl my-12">
+      {/* Picks Inspired by Your Shopping - Based on search history */}
+      <section className="py-6 px-4 max-w-6xl mx-auto w-full my-4">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-[#3E7C59] mb-2">Recently Viewed</h2>
-            <p className="text-gray-600 max-w-xl">Products you've explored that might interest you</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Picks Inspired by Your Shopping</h2>
+            <p className="text-gray-500">
+              {hasSearchHistory 
+                ? "Recommendations based on your search history" 
+                : "Products you might be interested in"}
+            </p>
           </div>
           <a 
             href="/products" 
-            className="mt-4 md:mt-0 text-primary font-semibold flex items-center group transition-all duration-300 hover:text-success focus:outline-none focus:underline"
-            aria-label="View all recently viewed products"
+            className="mt-4 md:mt-0 text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200"
+            aria-label="View all products"
           >
-            View All
+            See all
             <svg 
-              className="w-5 h-5 ml-1 transform transition-transform duration-300 group-hover:translate-x-1" 
+              className="w-4 h-4 ml-1" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -370,75 +618,253 @@ function Home() {
           </a>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {recentlyViewedProducts.map((product) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
+          {recommendedProducts.map((product) => (
             <div 
               key={product.id} 
-              className="bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary"
-              tabIndex={0}
+              className="group"
             >
-              <div className="relative pb-[100%] overflow-hidden bg-gray-100">
+              <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
                 <img 
                   src={product.image} 
                   alt={product.name} 
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
                 />
-                <span className="absolute top-2 right-2 bg-primary/90 text-xs text-white px-2 py-1 rounded-full">
+                <span className="absolute top-2 left-2 bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
                   {product.category}
                 </span>
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-800 mb-1 truncate">{product.name}</h3>
-                <div className="flex justify-between items-center">
-                  <span className="text-primary font-bold">
-                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
-                  </span>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                <div className="absolute bottom-3 right-3 flex space-x-2">
                   <button 
-                    aria-label={`Add ${product.name} to cart`}
-                    className="text-gray-500 hover:text-primary transition-colors duration-300 focus:outline-none focus:text-primary"
+                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+                    aria-label={`Add ${product.name} to favorites`}
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   </button>
+                  <button 
+                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75"
+                    aria-label={`Add ${product.name} to cart`}
+                  >
+                    <svg className="w-5 h-5 text-gray-600 hover:text-[#3E7C59] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="px-1">
+                <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
+                  </span>
+                  <div className="flex items-center text-amber-400 text-xs">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span className="ml-1 text-xs text-gray-500">4.9</span>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </section>
+      
+      {/* Visual Separator */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="border-t border-gray-200 my-4"></div>
+      </div>
 
-      {/* Seller Spotlight Section */}
-      <section className="py-16 px-4 max-w-6xl mx-auto w-full">
-        <div className="flex items-center mb-2">
-          <div className="bg-yellow-400 h-8 w-1.5 rounded-full mr-3"></div>
-          <h2 className="text-2xl font-bold text-gray-800">Seller Spotlight</h2>
+      {/* Today's Big Deals - Etsy-inspired */}
+      <section className="py-6 px-4 max-w-6xl mx-auto w-full my-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Today's Big Deals</h2>
+            <p className="text-gray-500">Limited-time offers from local artisans</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <FlashSaleTimer key={timerKey} onReset={handleTimerReset} />
+            <a href="/deals" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
+              See all deals
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
         </div>
-        <p className="text-gray-600 mb-8 ml-4">Meet the local entrepreneurs behind our sustainable marketplace</p>
         
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        {/* Deals Navigation */}
+        <div className="relative mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex overflow-x-auto scrollbar-hide space-x-3 py-2 px-1 -mx-1">
+              <button className="whitespace-nowrap bg-[#3E7C59] text-white text-sm font-medium px-4 py-2 rounded-full">
+                All Deals
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Under Rp100.000
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Home & Living
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Handmade Crafts
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Food & Produce
+              </button>
+            </div>
+            
+            <div className="hidden sm:flex gap-2 ml-4">
+              <button
+                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 disabled:opacity-40 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
+                onClick={handleFlashSalePrev}
+                aria-label="Previous"
+                disabled={flashSaleStartIdx === 0}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button
+                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 disabled:opacity-40 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
+                onClick={handleFlashSaleNext}
+                aria-label="Next"
+                disabled={flashSaleStartIdx + flashSaleVisibleCount >= flashSaleProducts.length}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Deals Carousel */}
+        <div className="overflow-x-auto scrollbar-hide pb-4">
+          <div
+            className="flex gap-5 transition-transform duration-500 ease-in-out"
+            style={carouselTransformStyle}
+          >
+            {flashSaleProducts.map((product: any, idx: number) => (
+              <div key={product.id + '-' + idx} className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group">
+                <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
+                  <img 
+                    src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80'} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute top-2 left-2 flex flex-col gap-2">
+                    <span className="bg-[#A61B1B] text-white text-xs font-bold px-2.5 py-1.5 rounded">
+                      SALE
+                    </span>
+                    {product.category && (
+                      <span className="bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
+                        {product.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                  <div className="absolute bottom-3 right-3 flex space-x-2">
+                    <button 
+                      className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+                      aria-label={`Add ${product.name} to favorites`}
+                    >
+                      <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75"
+                      aria-label={`Add ${product.name} to cart`}
+                    >
+                      <svg className="w-5 h-5 text-gray-600 hover:text-[#3E7C59] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="px-1">
+                  <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
+                  <div className="flex items-end mb-1">
+                    <span className="font-semibold text-gray-900">
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
+                    </span>
+                    <span className="text-gray-400 text-sm line-through ml-2">
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price * 1.25)}
+                    </span>
+                    <span className="ml-2 text-[#A61B1B] text-sm font-medium">25% off</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center text-amber-400 text-xs">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="ml-1 text-xs text-gray-500">4.8 (24)</span>
+                    </div>
+                    {product.seller && (
+                      <span className="text-xs text-gray-500">{product.seller}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Visual Separator */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="border-t border-gray-200 my-4"></div>
+      </div>
+
+      {/* Testimonials Section */}
+      <section className="py-6 px-4 max-w-6xl mx-auto w-full my-4">
+        <Testimonials testimonials={testimonials} />
+      </section>
+      
+      {/* Visual Separator */}
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="border-t border-gray-200 my-4"></div>
+      </div>
+      
+      {/* Seller Spotlight Section - Etsy-inspired */}
+      <section className="py-6 px-4 max-w-6xl mx-auto w-full my-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Seller Spotlight</h2>
+            <p className="text-gray-500">Meet the local entrepreneurs behind our sustainable marketplace</p>
+          </div>
+          <a href="/sellers" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
+            Discover more sellers
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
           <div className="md:flex">
             {/* Seller Info */}
-            <div className="md:w-1/3 bg-[#F4FBF5] p-6 flex flex-col">
-              <div className="flex items-center mb-4">
+            <div className="md:w-1/3 bg-gray-50 p-8 md:p-12 lg:p-16">
+              <div className="flex items-start mb-6">
                 <img 
                   src={sellerOfTheWeek.image} 
                   alt={sellerOfTheWeek.name} 
-                  className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md"
                   loading="lazy"
                 />
-                <div className="ml-4">
-                  <h3 className="font-bold text-[#3E7C59] text-lg">{sellerOfTheWeek.name}</h3>
+                <div className="ml-4 pt-1">
+                  <h3 className="font-bold text-gray-800 text-lg mb-1">{sellerOfTheWeek.name}</h3>
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="ml-1 text-sm font-semibold">{sellerOfTheWeek.rating}</span>
-                    <span className="mx-1 text-gray-400">•</span>
-                    <span className="text-sm text-gray-600">{sellerOfTheWeek.reviewCount} reviews</span>
+                    <div className="flex text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className="w-4 h-4" fill={i < Math.floor(sellerOfTheWeek.rating) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="ml-2 text-sm text-gray-500">{sellerOfTheWeek.rating} ({sellerOfTheWeek.reviewCount} reviews)</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                  <div className="flex items-center text-sm text-gray-500 mt-1">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -448,49 +874,79 @@ function Home() {
                 </div>
               </div>
               
-              <p className="text-gray-700 mb-6 flex-grow">{sellerOfTheWeek.bio}</p>
+              <div className="flex items-center mb-4 text-sm">
+                <span className="bg-[#E8F5E9] text-[#388E3C] px-3 py-1 rounded-full font-medium">
+                  Eco-friendly
+                </span>
+                <span className="bg-[#E3F2FD] text-[#1976D2] px-3 py-1 rounded-full font-medium ml-2">
+                  Local artisan
+                </span>
+              </div>
               
-              <a 
-                href="#" 
-                className="bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-success transition-colors duration-300 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label={`Visit ${sellerOfTheWeek.name}'s shop`}
-              >
-                Visit Shop
-              </a>
+              <p className="text-gray-600 mb-8 flex-grow leading-relaxed">{sellerOfTheWeek.bio}</p>
+              
+              <div className="flex space-x-3">
+                <a 
+                  href="#" 
+                  className="bg-[#3E7C59] text-white font-medium px-6 py-3 rounded-lg shadow-sm hover:bg-[#2D5B41] transition-colors duration-200 text-center flex-grow"
+                  aria-label={`Visit ${sellerOfTheWeek.name}'s shop`}
+                >
+                  Visit Shop
+                </a>
+                <button 
+                  className="border border-gray-300 text-gray-600 font-medium p-3 rounded-lg hover:border-[#3E7C59] hover:text-[#3E7C59] transition-colors duration-200"
+                  aria-label="Contact seller"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             {/* Featured Products */}
-            <div className="md:w-2/3 p-6">
-              <h4 className="font-semibold text-gray-800 mb-4">Featured Products</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="md:w-2/3 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="font-bold text-gray-800">Featured Products</h4>
+                <a href="#" className="text-[#3E7C59] hover:text-[#2D5B41] text-sm font-medium">View all products</a>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {sellerOfTheWeek.featuredProducts.map((product) => (
                   <div 
                     key={product.id} 
-                    className="flex bg-gray-50 rounded-lg overflow-hidden transform transition-all duration-300 hover:shadow hover:bg-gray-100 focus-within:ring-2 focus-within:ring-primary"
-                    tabIndex={0}
+                    className="group rounded-lg overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
                   >
-                    <div className="w-1/3 relative">
+                    <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
                       <img 
                         src={product.image} 
                         alt={product.name} 
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                       />
-                    </div>
-                    <div className="w-2/3 p-4">
-                      <h5 className="font-semibold text-gray-800 mb-2">{product.name}</h5>
-                      <p className="text-primary font-bold">
-                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
-                      </p>
                       <button 
-                        className="mt-2 text-sm text-gray-600 hover:text-primary transition-colors duration-300 flex items-center focus:outline-none focus:text-primary"
-                        aria-label={`View details of ${product.name}`}
+                        className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+                        aria-label={`Add ${product.name} to favorites`}
                       >
-                        View Details
-                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
                       </button>
+                    </div>
+                    <div className="p-4">
+                      <h5 className="font-medium text-gray-800 mb-2 group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h5>
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-gray-900">
+                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
+                        </span>
+                        <button 
+                          className="text-gray-400 hover:text-[#3E7C59] transition-colors duration-200"
+                          aria-label={`Add ${product.name} to cart`}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -500,23 +956,63 @@ function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section>
-        <Testimonials testimonials={testimonials} />
-      </section>
-
-      {/* Call to Action Section */}
-      <section className="py-12 px-4 bg-secondary text-white flex flex-col items-center" style={{backgroundColor: '#A08F79'}}>
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-center">Ready to join your neighborhood market?</h2>
-        <p className="mb-6 text-center max-w-xl">
-          Sign up today and start making a positive impact in your community!
-        </p>
-        <a
-          href="#"
-          className="bg-primary text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:bg-success transition"
-          style={{backgroundColor:'#7BAE7F'}}>
-          Get Started
-        </a>
+      {/* Call to Action Section - Etsy-inspired */}
+      <section className="py-6 px-4 max-w-6xl mx-auto w-full my-4">
+        <div className="bg-[#F4F3F0] rounded-xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3E7C59]/10 to-transparent"></div>
+          
+          <div className="md:flex items-center relative">
+            <div className="md:w-1/2 p-8 md:p-12 lg:p-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 leading-tight">
+                Join Our Community of Sustainable Creators
+              </h2>
+              <p className="text-gray-600 mb-8 text-lg">
+                Connect with local artisans, discover unique sustainable products, and be part of a movement that values community and our planet.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a 
+                  href="/signup" 
+                  className="bg-[#3E7C59] text-white font-medium px-8 py-3.5 rounded-lg shadow-sm hover:bg-[#2D5B41] transition-colors duration-200 text-center"
+                  aria-label="Sign up for Neighborly"
+                >
+                  Join Neighborly
+                </a>
+                <a 
+                  href="/about" 
+                  className="border border-gray-300 bg-white text-gray-700 font-medium px-8 py-3.5 rounded-lg hover:border-[#3E7C59] hover:text-[#3E7C59] transition-colors duration-200 text-center"
+                  aria-label="Learn more about Neighborly"
+                >
+                  Learn More
+                </a>
+              </div>
+            </div>
+            
+            <div className="md:w-1/2 relative hidden md:block">
+              <img 
+                src="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?auto=format&fit=crop&w=600&q=80" 
+                alt="Sustainable community marketplace" 
+                className="w-full h-full object-cover object-center"
+                style={{ minHeight: '400px' }}
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-l from-[#3E7C59]/20 to-transparent"></div>
+            </div>
+          </div>
+          
+          <div className="bg-[#E8F5E9] py-4 px-8 flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center mb-4 md:mb-0">
+              <svg className="w-5 h-5 text-[#388E3C] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-gray-700">Join <span className="font-medium">5,000+</span> members already on Neighborly</span>
+            </div>
+            <div className="flex space-x-4">
+              <a href="#" className="text-[#3E7C59] hover:text-[#2D5B41] text-sm font-medium">How it works</a>
+              <a href="#" className="text-[#3E7C59] hover:text-[#2D5B41] text-sm font-medium">Success stories</a>
+              <a href="#" className="text-[#3E7C59] hover:text-[#2D5B41] text-sm font-medium">FAQs</a>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Footer */}

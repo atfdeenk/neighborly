@@ -7,6 +7,7 @@ import ProductFilters from "../../components/ProductFilters";
 import Pagination from "../../components/Pagination";
 import { fetchProducts } from "../../lib/api";
 import { useSearchParams } from "next/navigation";
+import { addToSearchHistory } from "../../utils/searchHistory";
 
 export default function SuspenseProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -34,9 +35,14 @@ export default function SuspenseProductsPage() {
     });
   }, []);
 
-  // Reset to first page on filter/search change
+  // Reset to first page on filter/search change and track search history
   useEffect(() => {
     setCurrentPage(1);
+    
+    // Add search to history if it exists
+    if (search.trim()) {
+      addToSearchHistory(search, selectedCategory || undefined);
+    }
   }, [search, selectedCategory]);
 
   // Filter products by search and category

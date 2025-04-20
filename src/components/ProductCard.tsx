@@ -2,6 +2,7 @@ import React from "react";
 import { FaFire } from "react-icons/fa";
 import { Product } from "../types/product";
 import "../styles/firePulse.css";
+import DualCurrencyPrice from "./DualCurrencyPrice";
 
 interface ProductCardProps {
   product: Product;
@@ -89,13 +90,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       </div>
       <div className="flex items-center gap-2 mb-1">
-        <span className={`font-bold ${tagLabel === 'Flash Sale' ? 'text-xl text-[#7BAE7F]' : 'text-primary text-lg sm:text-xl'}`}>
-          ${product.price}
-        </span>
-        {showOldPrice && (
-          <span className={`line-through ${tagLabel === 'Flash Sale' ? 'text-xs ml-1' : 'text-gray-400 text-sm ml-2'}`}>
-            ${(product.price * 1.25).toFixed(2)}
-          </span>
+        {showOldPrice ? (
+          <DualCurrencyPrice 
+            amount={product.price * 1.25}
+            currency={product.currency || "USD"}
+            salePrice={product.price}
+            className={`font-bold ${tagLabel === 'Flash Sale' ? 'text-xl text-[#7BAE7F]' : 'text-primary text-lg sm:text-xl'}`}
+          />
+        ) : (
+          <DualCurrencyPrice 
+            amount={product.price}
+            currency={product.currency || "USD"}
+            className={`font-bold ${tagLabel === 'Flash Sale' ? 'text-xl text-[#7BAE7F]' : 'text-primary text-lg sm:text-xl'}`}
+          />
         )}
         {/* Discount badge inline next to price for sm and up */}
         {showOldPrice && tagLabel === 'Flash Sale' && (
