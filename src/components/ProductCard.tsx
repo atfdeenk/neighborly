@@ -24,7 +24,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <div className={`relative w-full overflow-hidden rounded-t-2xl flex items-center justify-center bg-gray-50 ${tagLabel === 'Flash Sale' ? 'h-[170px] md:h-[180px]' : 'aspect-square'}`}>
       {/* Discount badge top-right on mobile */}
       {showOldPrice && tagLabel === 'Flash Sale' && (
-        <span className="block sm:hidden bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full absolute right-2 top-2 z-30">
+        <span className="block sm:hidden bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full absolute right-2 top-2 z-10">
           -20%
         </span>
       )}
