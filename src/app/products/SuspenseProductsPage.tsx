@@ -15,6 +15,12 @@ export default function SuspenseProductsPage() {
   const searchParams = useSearchParams();
   const search = searchParams.get("q") || "";
   const [selectedCategory, setSelectedCategory] = useState("");
+
+  // Sync selectedCategory with ?category= param in URL
+  useEffect(() => {
+    const urlCategory = searchParams.get("category") || "";
+    setSelectedCategory(urlCategory);
+  }, [searchParams]);
   const [currentPage, setCurrentPage] = useState(1);
   const PRODUCTS_PER_PAGE = 12;
 
