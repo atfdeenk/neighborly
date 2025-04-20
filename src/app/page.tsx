@@ -100,7 +100,7 @@ export default function Home() {
 
       {/* Banner/Carousel */}
       <section className="w-full flex justify-center bg-white py-3 border-b border-accent" style={{borderColor:'#D9D4CC'}}>
-        <div className="w-full max-w-5xl px-2 md:px-4">
+        <div className="w-full max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center rounded-2xl overflow-hidden shadow-lg bg-gradient-to-r from-[#F6F5EC] to-white relative min-h-[180px] md:min-h-[220px]">
             {/* Left: Text Content */}
             <div className="flex-1 flex flex-col items-start justify-center py-4 md:py-6 pl-4 md:pl-8 pr-4 z-10">
