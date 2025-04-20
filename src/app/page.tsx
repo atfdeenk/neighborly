@@ -23,18 +23,83 @@ const bannerImages = [
 
 const testimonials = [
   {
-    name: "Ayu S.",
-    quote: "Neighborly made it so easy to find local, sustainable products. I love supporting my community!"
+    name: "Ayu Sari",
+    quote: "Neighborly made it so easy to find local, sustainable products. I love supporting my community while discovering unique items I can't find anywhere else!",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    rating: 5,
+    location: "Jakarta"
   },
   {
-    name: "Rizky P.",
-    quote: "The marketplace is beautiful and secure. I trust every transaction here."
+    name: "Rizky Pratama",
+    quote: "The marketplace is beautiful, secure, and intuitive. I trust every transaction here and the sellers are incredibly responsive and passionate.",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    rating: 5,
+    location: "Bandung"
   },
   {
-    name: "Dewi L.",
-    quote: "I discovered so many eco-friendly items I never knew existed! Highly recommended."
+    name: "Dewi Lestari",
+    quote: "I discovered so many eco-friendly items I never knew existed! The quality is outstanding and I feel good knowing I'm supporting local artisans.",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    rating: 4,
+    location: "Surabaya"
   }
 ];
+
+// Mock data for recently viewed products
+const recentlyViewedProducts = [
+  {
+    id: "rv1",
+    name: "Organic Honey",
+    price: 85000,
+    image: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=300&q=80",
+    category: "Food"
+  },
+  {
+    id: "rv2",
+    name: "Handmade Soap",
+    price: 45000,
+    image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=300&q=80",
+    category: "Beauty"
+  },
+  {
+    id: "rv3",
+    name: "Bamboo Utensils",
+    price: 120000,
+    image: "https://images.unsplash.com/photo-1584483766114-2cea6facdf57?auto=format&fit=crop&w=300&q=80",
+    category: "Home & Living"
+  },
+  {
+    id: "rv4",
+    name: "Recycled Notebook",
+    price: 35000,
+    image: "https://images.unsplash.com/photo-1531346680769-a1d79b57de5c?auto=format&fit=crop&w=300&q=80",
+    category: "Stationery"
+  }
+];
+
+// Mock data for seller of the week
+const sellerOfTheWeek = {
+  name: "Eco Artisan Collective",
+  location: "Yogyakarta",
+  bio: "A cooperative of local artisans creating sustainable home goods and accessories using traditional techniques and eco-friendly materials.",
+  image: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=300&q=80",
+  rating: 4.9,
+  reviewCount: 127,
+  featuredProducts: [
+    {
+      id: "sp1",
+      name: "Woven Bamboo Basket",
+      price: 250000,
+      image: "https://images.unsplash.com/photo-1595397551849-8330a4577251?auto=format&fit=crop&w=300&q=80",
+    },
+    {
+      id: "sp2",
+      name: "Natural Dye Scarf",
+      price: 180000,
+      image: "https://images.unsplash.com/photo-1601370552761-3c14bbc3ecce?auto=format&fit=crop&w=300&q=80",
+    }
+  ]
+};
 
 import { useRef } from "react";
 import "../styles/arrowPulse.css";
@@ -281,6 +346,159 @@ function Home() {
         </div>
       </section>
 
+      {/* Recently Viewed/Recommended Section */}
+      <section className="py-16 px-4 max-w-6xl mx-auto w-full bg-[#F8F7F4] rounded-3xl my-12">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-[#3E7C59] mb-2">Recently Viewed</h2>
+            <p className="text-gray-600 max-w-xl">Products you've explored that might interest you</p>
+          </div>
+          <a 
+            href="/products" 
+            className="mt-4 md:mt-0 text-primary font-semibold flex items-center group transition-all duration-300 hover:text-success focus:outline-none focus:underline"
+            aria-label="View all recently viewed products"
+          >
+            View All
+            <svg 
+              className="w-5 h-5 ml-1 transform transition-transform duration-300 group-hover:translate-x-1" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {recentlyViewedProducts.map((product) => (
+            <div 
+              key={product.id} 
+              className="bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary"
+              tabIndex={0}
+            >
+              <div className="relative pb-[100%] overflow-hidden bg-gray-100">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                />
+                <span className="absolute top-2 right-2 bg-primary/90 text-xs text-white px-2 py-1 rounded-full">
+                  {product.category}
+                </span>
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-gray-800 mb-1 truncate">{product.name}</h3>
+                <div className="flex justify-between items-center">
+                  <span className="text-primary font-bold">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
+                  </span>
+                  <button 
+                    aria-label={`Add ${product.name} to cart`}
+                    className="text-gray-500 hover:text-primary transition-colors duration-300 focus:outline-none focus:text-primary"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Seller Spotlight Section */}
+      <section className="py-16 px-4 max-w-6xl mx-auto w-full">
+        <div className="flex items-center mb-2">
+          <div className="bg-yellow-400 h-8 w-1.5 rounded-full mr-3"></div>
+          <h2 className="text-2xl font-bold text-gray-800">Seller Spotlight</h2>
+        </div>
+        <p className="text-gray-600 mb-8 ml-4">Meet the local entrepreneurs behind our sustainable marketplace</p>
+        
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="md:flex">
+            {/* Seller Info */}
+            <div className="md:w-1/3 bg-[#F4FBF5] p-6 flex flex-col">
+              <div className="flex items-center mb-4">
+                <img 
+                  src={sellerOfTheWeek.image} 
+                  alt={sellerOfTheWeek.name} 
+                  className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                  loading="lazy"
+                />
+                <div className="ml-4">
+                  <h3 className="font-bold text-[#3E7C59] text-lg">{sellerOfTheWeek.name}</h3>
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span className="ml-1 text-sm font-semibold">{sellerOfTheWeek.rating}</span>
+                    <span className="mx-1 text-gray-400">•</span>
+                    <span className="text-sm text-gray-600">{sellerOfTheWeek.reviewCount} reviews</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {sellerOfTheWeek.location}
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 mb-6 flex-grow">{sellerOfTheWeek.bio}</p>
+              
+              <a 
+                href="#" 
+                className="bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-success transition-colors duration-300 text-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label={`Visit ${sellerOfTheWeek.name}'s shop`}
+              >
+                Visit Shop
+              </a>
+            </div>
+            
+            {/* Featured Products */}
+            <div className="md:w-2/3 p-6">
+              <h4 className="font-semibold text-gray-800 mb-4">Featured Products</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {sellerOfTheWeek.featuredProducts.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="flex bg-gray-50 rounded-lg overflow-hidden transform transition-all duration-300 hover:shadow hover:bg-gray-100 focus-within:ring-2 focus-within:ring-primary"
+                    tabIndex={0}
+                  >
+                    <div className="w-1/3 relative">
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="w-2/3 p-4">
+                      <h5 className="font-semibold text-gray-800 mb-2">{product.name}</h5>
+                      <p className="text-primary font-bold">
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
+                      </p>
+                      <button 
+                        className="mt-2 text-sm text-gray-600 hover:text-primary transition-colors duration-300 flex items-center focus:outline-none focus:text-primary"
+                        aria-label={`View details of ${product.name}`}
+                      >
+                        View Details
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Testimonials Section */}
       <section>
