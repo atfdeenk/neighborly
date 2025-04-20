@@ -6,6 +6,7 @@
 ---
 
 ## Table of Contents
+
 1. [Demo / Preview](#demo--preview)
 2. [Features](#features)
 3. [Architecture & Tech Stack](#1-architecture--tech-stack-overview)
@@ -27,11 +28,13 @@
 ---
 
 ## Demo / Preview
-> _Add your live demo link here if available._
+
+> _[Neighborly](https://neighborly-murex.vercel.app/)_
 
 ---
 
 ## Mockups
+
 Below are the main UI mockups for Neighborly. These illustrate the core user flows and design direction:
 
 **User Authentication & Authorization**
@@ -53,6 +56,7 @@ Below are the main UI mockups for Neighborly. These illustrate the core user flo
 ---
 
 ## Features
+
 - User authentication and role-based authorization (Consumers & Sellers)
 - Market discovery and product browsing with filters, search, and pagination
 - Product detail pages with 5-star review system
