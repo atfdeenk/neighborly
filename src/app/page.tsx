@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import { Suspense } from "react";
 import FlashSaleTimer from "../components/FlashSaleTimer";
 import Footer from "../components/Footer";
 import CategoryMenu from "../components/CategoryMenu";
@@ -112,7 +113,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-black flex flex-col">
       {/* Navbar */}
-      <Navbar />
+      <Suspense fallback={null}>
+        <Navbar />
+      </Suspense>
 
       {/* Category Menu */}
       {/* <CategoryMenu /> */}
