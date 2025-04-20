@@ -13,12 +13,12 @@ import Testimonials from "../components/Testimonials";
 import { fetchProducts } from "../lib/api";
 
 const bannerImages = [
-  // Variety of vegetables display with Certified Organic signage (community, sustainable)
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-  // Assorted fruits at a vibrant market (local, fresh, colorful)
-  "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=1200&q=80",
-  // Local seller at a vegetable stand (community, pro-local seller)
-  "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=1200&q=80",
+  // Vibrant farmers market with fresh produce and local sellers
+  "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80",
+  // Organic vegetables in wooden crates at local market
+  "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+  // Farmers market with people shopping for fresh local produce
+  "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=1200&q=80",
 ];
 
 const testimonials = [
