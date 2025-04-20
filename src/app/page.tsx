@@ -42,6 +42,25 @@ export default function Home() {
   const flashSaleVisibleCount = 3;
   const [lastUsedArrow, setLastUsedArrow] = useState<'prev' | 'next' | null>(null);
 
+  // Responsive carousel transform effect (must be after flashSaleStartIdx)
+  const [carouselTransformStyle, setCarouselTransformStyle] = useState<React.CSSProperties>({});
+  useEffect(() => {
+    function updateTransform() {
+      if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+        // sm: 240px + 16px gap, md: 280px + 24px gap
+        let cardWidth = 240, gap = 16;
+        if (window.innerWidth >= 768) { cardWidth = 280; gap = 24; }
+        setCarouselTransformStyle({ transform: `translateX(-${flashSaleStartIdx * (cardWidth + gap)}px)` });
+      } else {
+        setCarouselTransformStyle({}); // Mobile: native scroll
+      }
+    }
+    updateTransform();
+    window.addEventListener('resize', updateTransform);
+    return () => window.removeEventListener('resize', updateTransform);
+  }, [flashSaleStartIdx]);
+
+
   // Banner carousel state (MUST be inside component)
   const [bannerIdx, setBannerIdx] = useState(0);
   useEffect(() => {
@@ -202,13 +221,10 @@ export default function Home() {
           </div>
           {/* Flash Sale Horizontal Carousel */}
           <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            {/* Flash Sale Carousel: Transform only on desktop, native scroll on mobile */}
             <div
               className="flex gap-3 sm:gap-4 md:gap-6 py-2 min-h-[210px] sm:min-h-[270px] md:min-h-[330px] transition-transform duration-500 ease-in-out"
-              style={
-                typeof window !== 'undefined' && window.innerWidth >= 640
-                  ? { transform: `translateX(-${flashSaleStartIdx * (window.innerWidth < 768 ? 240 + 16 : 280 + 24)}px)` }
-                  : {} // No transform on mobile, allow scroll
-              }
+              style={carouselTransformStyle}
             >
               {flashSaleProducts.map((product: any, idx: number) => (
                 <div key={product.id + '-' + idx} className="min-w-[180px] max-w-[180px] sm:min-w-[240px] sm:max-w-[240px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0">
