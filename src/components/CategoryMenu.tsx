@@ -11,7 +11,8 @@ const categories = [
 
 const CategoryMenu: React.FC = () => (
   <div className="w-full flex justify-center bg-accent/40 border-b border-accent" style={{borderColor:'#D9D4CC'}}>
-    <div className="flex gap-6 px-4 sm:px-8 py-3">
+    <div className="flex gap-4 sm:gap-6 px-2 sm:px-8 py-2 sm:py-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+
       {categories.map((cat, idx) => (
         <button
           key={idx}

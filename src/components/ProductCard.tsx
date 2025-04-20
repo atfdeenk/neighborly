@@ -17,11 +17,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
   tagLabel,
 }) => (
   <div
-    className={`group bg-white rounded-2xl flex flex-col items-stretch border border-gray-200 transition-all duration-200 cursor-pointer ${tagLabel === 'Flash Sale' ? 'shadow-lg ring-2 ring-[#7BAE7F]/10 hover:ring-[#7BAE7F]/30 hover:shadow-2xl h-[400px] min-h-[400px]' : 'shadow-md hover:shadow-xl hover:-translate-y-1'}`}
-    style={{ minWidth: 0, ...(tagLabel === 'Flash Sale' ? { maxWidth: 280, padding: '0.5rem' } : {}) }}
+    className={`group bg-white rounded-2xl flex flex-col items-stretch border border-gray-200 transition-all duration-200 cursor-pointer ${tagLabel === 'Flash Sale' ? 'shadow-lg ring-2 ring-[#7BAE7F]/10 hover:ring-[#7BAE7F]/30 hover:shadow-2xl p-2 sm:p-3 md:p-4 max-w-[90vw]' : 'shadow-md hover:shadow-xl hover:-translate-y-1 p-2 sm:p-3 md:p-4 max-w-[90vw]'}`}
+    style={{ minWidth: 0, ...(tagLabel === 'Flash Sale' ? { maxWidth: '90vw', padding: '0.5rem' } : {}) }}
     title={product.title}
   >
     <div className={`relative w-full overflow-hidden rounded-t-2xl flex items-center justify-center bg-gray-50 ${tagLabel === 'Flash Sale' ? 'h-[170px] md:h-[180px]' : 'aspect-square'}`}>
+      {/* Discount badge top-right on mobile */}
+      {showOldPrice && tagLabel === 'Flash Sale' && (
+        <span className="block sm:hidden bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full absolute right-2 top-2 z-30">
+          -20%
+        </span>
+      )}
+
       {/* Bestseller badge absolute top-left */}
       {product.sold && product.sold >= 1600 && (
         <span
@@ -90,15 +97,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ${(product.price * 1.25).toFixed(2)}
           </span>
         )}
+        {/* Discount badge inline next to price for sm and up */}
         {showOldPrice && tagLabel === 'Flash Sale' && (
-          <span className="ml-2 bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+          <span className="hidden sm:inline bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full ml-2">
             -20%
           </span>
         )}
       </div>
       {tagLabel === 'Flash Sale' && typeof product.stock === 'number' && (
         <div className="w-full mt-2 mb-1">
-          <div className="w-full h-6 bg-gray-200 rounded-full flex items-center relative" style={{overflow: 'visible'}} >
+          <div className="w-full h-4 sm:h-6 bg-gray-200 rounded-full flex items-center relative" style={{overflow: 'visible'}} >
             {/* Progress fill */}
             <div
               className="h-6 rounded-full bg-gradient-to-r from-[#7BAE7F] to-[#4C6B4F] transition-all duration-500 absolute top-0 left-0"
@@ -113,7 +121,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 filter: 'drop-shadow(0 0 0.5px #FF9800) drop-shadow(0 0 0.5px #FFD740)'
               }}
             >
-              <FaFire className="text-orange-500 text-2xl md:text-3xl" />
+              <FaFire className="text-orange-500 text-base sm:text-lg md:text-2xl" />
             </span>
             {/* Text overlays progress bar - only show when stock < 10 */}
             {product.stock < 10 && (

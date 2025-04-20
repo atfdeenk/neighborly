@@ -181,7 +181,7 @@ export default function Home() {
               </span>
               <FlashSaleTimer key={timerKey} onReset={handleTimerReset} />
             </div>
-            <div className="flex gap-2">
+            <div className="hidden sm:flex gap-2">
               <button
                 className={`arrow-pulse bg-white border border-[#7BAE7F]/50 shadow-lg rounded-full p-3 transition-all duration-300 disabled:opacity-40 active:scale-90 focus:outline-none focus:ring-2 focus:ring-[#7BAE7F] hover:ring-2 hover:ring-[#7BAE7F]/40 hover:bg-[#F4FBF5] ${lastUsedArrow === 'prev' ? 'scale-125 z-10' : 'scale-100'}`}
                 onClick={handleFlashSalePrev}
@@ -201,15 +201,17 @@ export default function Home() {
             </div>
           </div>
           {/* Flash Sale Horizontal Carousel */}
-          <div className="overflow-hidden">
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             <div
-              className="flex gap-6 py-2 min-h-[330px] transition-transform duration-500 ease-in-out"
-              style={{
-                transform: `translateX(-${flashSaleStartIdx * (280 + 24)}px)` // 280px card + 24px gap
-              }}
+              className="flex gap-3 sm:gap-4 md:gap-6 py-2 min-h-[210px] sm:min-h-[270px] md:min-h-[330px] transition-transform duration-500 ease-in-out"
+              style={
+                typeof window !== 'undefined' && window.innerWidth >= 640
+                  ? { transform: `translateX(-${flashSaleStartIdx * (window.innerWidth < 768 ? 240 + 16 : 280 + 24)}px)` }
+                  : {} // No transform on mobile, allow scroll
+              }
             >
               {flashSaleProducts.map((product: any, idx: number) => (
-                <div key={product.id + '-' + idx} className="min-w-[280px] max-w-[280px] flex-shrink-0">
+                <div key={product.id + '-' + idx} className="min-w-[180px] max-w-[180px] sm:min-w-[240px] sm:max-w-[240px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0">
                   <ProductCard
                     product={product}
                     showCategoryTag={true}
