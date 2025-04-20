@@ -38,13 +38,21 @@ const Navbar: React.FC = () => {
           <input
             type="text"
             value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
             placeholder="Search for products, brands, or categories..."
             className="flex-1 bg-transparent outline-none text-text placeholder:text-gray-500"
             style={{color:'#333333'}}
             onKeyDown={e => {
-              if (e.key === 'Enter' && searchInput.trim()) {
-                router.push(`/products?q=${encodeURIComponent(searchInput)}`);
+              if (pathname !== '/products') {
+                if (e.key === 'Enter' && searchInput.trim()) {
+                  router.push(`/products?q=${encodeURIComponent(searchInput)}`);
+                }
+              }
+            }}
+            onChange={e => {
+              setSearchInput(e.target.value);
+              if (pathname === '/products') {
+                const val = e.target.value;
+                router.push(val.trim() ? `/products?q=${encodeURIComponent(val)}` : '/products');
               }
             }}
           />
@@ -77,14 +85,26 @@ const Navbar: React.FC = () => {
               autoFocus
               type="text"
               value={mobileSearchInput}
-              onChange={e => setMobileSearchInput(e.target.value)}
               placeholder="Search..."
               className="flex-1 bg-transparent outline-none text-text placeholder:text-gray-500 transition-all duration-300"
               style={{color:'#333333'}}
               onKeyDown={e => {
-                if (e.key === 'Enter' && mobileSearchInput.trim()) {
-                  router.push(`/products?q=${encodeURIComponent(mobileSearchInput)}`);
-                  setMobileSearchOpen(false);
+                if (pathname !== '/products') {
+                  if (e.key === 'Enter' && mobileSearchInput.trim()) {
+                    router.push(`/products?q=${encodeURIComponent(mobileSearchInput)}`);
+                    setMobileSearchOpen(false);
+                  }
+                } else {
+                  if (e.key === 'Enter') {
+                    setMobileSearchOpen(false);
+                  }
+                }
+              }}
+              onChange={e => {
+                setMobileSearchInput(e.target.value);
+                if (pathname === '/products') {
+                  const val = e.target.value;
+                  router.push(val.trim() ? `/products?q=${encodeURIComponent(val)}` : '/products');
                 }
               }}
             />
