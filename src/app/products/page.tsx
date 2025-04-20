@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
+import { Suspense } from "react";
 import Footer from "../../components/Footer";
 import ProductGrid from "../../components/ProductGrid";
 import { fetchProducts } from "../../lib/api";
@@ -35,7 +36,9 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-white text-black flex flex-col">
-      <Navbar />
+      <Suspense fallback={null}>
+        <Navbar />
+      </Suspense>
       <section className="py-8 px-4 max-w-6xl mx-auto w-full flex-1">
         <h2 className="text-2xl font-bold text-black mb-6">All Products</h2>
         {loading ? (
