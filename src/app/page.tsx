@@ -50,13 +50,13 @@ const sellerOfTheWeek = {
       id: "sp1",
       name: "Woven Bamboo Basket",
       price: 250000,
-      image: "https://images.unsplash.com/photo-1595397551849-8330a4577251?auto=format&fit=crop&w=300&q=80",
+      image: "https://source.unsplash.com/random/300x300/?basket",
     },
     {
       id: "sp2",
       name: "Natural Dye Scarf",
       price: 180000,
-      image: "https://images.unsplash.com/photo-1601370552761-3c14bbc3ecce?auto=format&fit=crop&w=300&q=80",
+      image: "https://source.unsplash.com/random/300x300/?scarf",
     }
   ]
 };
@@ -218,7 +218,7 @@ function Home() {
                 </p>
                 
                 <div className="flex flex-wrap gap-3 mb-8">
-                  <a href="/sustainable" className="bg-[#3E7C59] hover:bg-[#2D5B41] text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200">
+                  <a href="/products" className="bg-[#3E7C59] hover:bg-[#2D5B41] text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200">
                     Shop Sustainable
                   </a>
                   <a href="/sellers" className="bg-white text-gray-800 font-medium px-6 py-3 rounded-lg border border-gray-300 hover:border-[#3E7C59] hover:text-[#3E7C59] transition-colors duration-200">
@@ -255,7 +255,7 @@ function Home() {
                   <div className="space-y-4">
                     <div className="rounded-lg overflow-hidden group relative">
                       <img 
-                        src="https://images.unsplash.com/photo-1556911220-bda9f7b7e482?auto=format&fit=crop&w=600&q=80" 
+                        src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=600&q=80" 
                         alt="Spring Collection" 
                         className="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"
                       />
