@@ -351,7 +351,7 @@ function Home() {
             <h2 className="text-2xl font-bold text-gray-800 mb-1">Discover Gifts for Every Occasion</h2>
             <p className="text-gray-500">Unique, sustainable treasures for everyone on your list</p>
           </div>
-          <a href="/categories" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
+          <a href="/products" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
             See all categories
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -636,12 +636,16 @@ function Home() {
       {/* Today's Big Deals - Etsy-inspired */}
       <section className="py-6 px-4 max-w-6xl mx-auto w-full my-4">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Today's Big Deals</h2>
-            <p className="text-gray-500">Limited-time offers from local artisans</p>
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h2 className="text-2xl font-bold text-gray-800">Today's Big Deals</h2>
+                <FlashSaleTimer key={timerKey} onReset={handleTimerReset} />
+              </div>
+              <p className="text-gray-500">Limited-time offers from local artisans</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <FlashSaleTimer key={timerKey} onReset={handleTimerReset} />
+          <div>
             <a href="/deals" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
               See all deals
               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
