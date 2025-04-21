@@ -2,25 +2,14 @@
 
 import { useState, useEffect, useRef, CSSProperties, Suspense } from 'react';
 import { fetchProducts } from '@/lib/api';
-import { getSearchHistory, getRecommendedProducts } from '@/utils/searchHistory';
+import { getSearchHistory, getRecommendedProducts, clearSearchHistory, addToViewedProducts } from '@/utils/searchHistory';
 import FlashSaleTimer from '@/components/FlashSaleTimer';
 import DualCurrencyPrice from '@/components/DualCurrencyPrice';
 import "../styles/arrowPulse.css";
 import Footer from "../components/Footer";
-import CategoryMenu from "../components/CategoryMenu";
-import ProductGrid from "../components/ProductGrid";
-import ProductCard from "../components/ProductCard";
 import Testimonials from "../components/Testimonials";
 import Navbar from "../components/Navbar";
 
-const bannerImages = [
-  // Vibrant farmers market with fresh produce and local sellers
-  "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80",
-  // Organic vegetables in wooden crates at local market
-  "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
-  // Farmers market with people shopping for fresh local produce
-  "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=1200&q=80",
-];
 
 const testimonials = [
   {
@@ -46,37 +35,7 @@ const testimonials = [
   }
 ];
 
-// Mock data for recently viewed products
-const recentlyViewedProducts = [
-  {
-    id: "rv1",
-    name: "Organic Honey",
-    price: 85000,
-    image: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=300&q=80",
-    category: "Food"
-  },
-  {
-    id: "rv2",
-    name: "Handmade Soap",
-    price: 45000,
-    image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=300&q=80",
-    category: "Beauty"
-  },
-  {
-    id: "rv3",
-    name: "Bamboo Utensils",
-    price: 120000,
-    image: "https://images.unsplash.com/photo-1584483766114-2cea6facdf57?auto=format&fit=crop&w=300&q=80",
-    category: "Home & Living"
-  },
-  {
-    id: "rv4",
-    name: "Recycled Notebook",
-    price: 35000,
-    image: "https://images.unsplash.com/photo-1531346680769-a1d79b57de5c?auto=format&fit=crop&w=300&q=80",
-    category: "Stationery"
-  }
-];
+
 
 // Mock data for seller of the week
 const sellerOfTheWeek = {
@@ -110,9 +69,10 @@ function Home() {
   const [timerKey, setTimerKey] = useState(0);
   const [flashSaleStartIdx, setFlashSaleStartIdx] = useState(0);
   const [recommendedStartIdx, setRecommendedStartIdx] = useState(0);
+  const [recommendationFilter, setRecommendationFilter] = useState<'forYou' | 'searches' | 'viewed' | 'similar'>('forYou');
   const flashSaleVisibleCount = 3;
   const recommendedVisibleCount = 4;
-  const [lastUsedArrow, setLastUsedArrow] = useState<'prev' | 'next' | null>(null);
+
 
   // Carousel transform styles for different sections
   const [flashSaleCarouselStyle, setFlashSaleCarouselStyle] = useState<CSSProperties>({});
@@ -145,14 +105,7 @@ function Home() {
     return () => window.removeEventListener('resize', updateTransform);
   }, [flashSaleStartIdx, recommendedStartIdx]);
 
-  // Banner carousel state (MUST be inside component)
-  const [bannerIdx, setBannerIdx] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBannerIdx(idx => (idx + 1) % bannerImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+
 
   const handleFlashSalePrev = () => {
     if (flashSaleStartIdx > 0) {
@@ -217,12 +170,22 @@ function Home() {
         const searchHistory = getSearchHistory();
         setHasSearchHistory(searchHistory.length > 0);
         
-        // Get recommended products based on search history
-        const recommended = getRecommendedProducts(withFeatured, 8);
+        // Get recommended products based on search history and filter type
+        const recommended = getRecommendedProducts(withFeatured, 8, 'forYou');
         setRecommendedProducts(recommended);
       }
     });
   }, []);
+  
+  // Update recommendations when filter changes
+  useEffect(() => {
+    if (products.length > 0) {
+      const recommended = getRecommendedProducts(products, 8, recommendationFilter);
+      setRecommendedProducts(recommended);
+      // Reset carousel position when changing filters
+      setRecommendedStartIdx(0);
+    }
+  }, [recommendationFilter, products]);
 
   // Listen for timer resets (FlashSaleTimer will accept a prop to notify parent)
   const handleTimerReset = () => {
@@ -506,11 +469,34 @@ function Home() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-1">Picks Inspired by Your Shopping</h2>
-            <p className="text-gray-500">
-              {hasSearchHistory 
-                ? "Recommendations based on your search history" 
-                : "Products you might be interested in"}
-            </p>
+            <div className="flex items-center">
+              <p className="text-gray-500">
+                {recommendationFilter === 'forYou' && (hasSearchHistory 
+                  ? "Personalized recommendations based on your activity" 
+                  : "Products you might be interested in")}
+                {recommendationFilter === 'searches' && (hasSearchHistory 
+                  ? "Products matching your search history" 
+                  : "Popular products - try searching to see personalized results")}
+                {recommendationFilter === 'viewed' && "Products you've recently viewed"}
+                {recommendationFilter === 'similar' && "Products similar to what you've viewed or searched"}
+              </p>
+              {hasSearchHistory && (
+                <button 
+                  onClick={() => {
+                    if (window.confirm('Clear your search history? This will reset your personalized recommendations.')) {
+                      clearSearchHistory();
+                      setHasSearchHistory(false);
+                      // Refresh recommendations
+                      const recommended = getRecommendedProducts(products, 8, recommendationFilter);
+                      setRecommendedProducts(recommended);
+                    }
+                  }}
+                  className="ml-2 text-xs text-gray-500 hover:text-[#3E7C59] underline"
+                >
+                  Clear History
+                </button>
+              )}
+            </div>
           </div>
           <a 
             href="/products" 
@@ -533,16 +519,28 @@ function Home() {
         <div className="relative mb-6">
           <div className="flex items-center justify-between">
             <div className="flex overflow-x-auto scrollbar-hide space-x-3 py-2 px-1 -mx-1">
-              <button className="whitespace-nowrap bg-[#3E7C59] text-white text-sm font-medium px-4 py-2 rounded-full">
+              <button 
+                onClick={() => setRecommendationFilter('forYou')}
+                className={`whitespace-nowrap ${recommendationFilter === 'forYou' ? 'bg-[#3E7C59] text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59]'} text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200`}
+              >
                 For You
               </button>
-              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+              <button 
+                onClick={() => setRecommendationFilter('searches')}
+                className={`whitespace-nowrap ${recommendationFilter === 'searches' ? 'bg-[#3E7C59] text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59]'} text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200`}
+              >
                 Based on Searches
               </button>
-              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+              <button 
+                onClick={() => setRecommendationFilter('viewed')}
+                className={`whitespace-nowrap ${recommendationFilter === 'viewed' ? 'bg-[#3E7C59] text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59]'} text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200`}
+              >
                 Recently Viewed
               </button>
-              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+              <button 
+                onClick={() => setRecommendationFilter('similar')}
+                className={`whitespace-nowrap ${recommendationFilter === 'similar' ? 'bg-[#3E7C59] text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59]'} text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200`}
+              >
                 Similar Items
               </button>
             </div>
@@ -575,7 +573,18 @@ function Home() {
             style={recommendedCarouselStyle}
           >
             {recommendedProducts.map((product, idx) => (
-              <div key={product.id + '-' + idx} className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group">
+              <div 
+                key={product.id + '-' + idx} 
+                className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group cursor-pointer"
+                onClick={() => {
+                  // Track product view when clicked
+                  if (product.id) {
+                    addToViewedProducts(product.id);
+                  }
+                  // In a real app, this would navigate to the product page
+                  alert(`Viewing ${product.name || product.title}`);
+                }}
+              >
                 <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
                   <img 
                     src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80'} 
@@ -704,7 +713,18 @@ function Home() {
             style={flashSaleCarouselStyle}
           >
             {flashSaleProducts.map((product: any, idx: number) => (
-              <div key={product.id + '-' + idx} className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group">
+              <div 
+                key={product.id + '-' + idx} 
+                className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group cursor-pointer"
+                onClick={() => {
+                  // Track product view when clicked
+                  if (product.id) {
+                    addToViewedProducts(product.id);
+                  }
+                  // In a real app, this would navigate to the product page
+                  alert(`Viewing ${product.name || product.title}`);
+                }}
+              >
                 <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
                   <img 
                     src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80'} 
