@@ -469,7 +469,7 @@ function Home() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-1">Picks Inspired by Your Shopping</h2>
-            <div className="flex items-center">
+            <div className="flex flex-col space-y-2">
               <p className="text-gray-500">
                 {recommendationFilter === 'forYou' && (hasSearchHistory 
                   ? "Personalized recommendations based on your activity" 
@@ -480,21 +480,35 @@ function Home() {
                 {recommendationFilter === 'viewed' && "Products you've recently viewed"}
                 {recommendationFilter === 'similar' && "Products similar to what you've viewed or searched"}
               </p>
+              
               {hasSearchHistory && (
-                <button 
-                  onClick={() => {
-                    if (window.confirm('Clear your search history? This will reset your personalized recommendations.')) {
-                      clearSearchHistory();
-                      setHasSearchHistory(false);
-                      // Refresh recommendations
-                      const recommended = getRecommendedProducts(products, 8, recommendationFilter);
-                      setRecommendedProducts(recommended);
-                    }
-                  }}
-                  className="ml-2 text-xs text-gray-500 hover:text-[#3E7C59] underline"
-                >
-                  Clear History
-                </button>
+                <div className="flex items-center">
+                  <span className="text-xs text-[#3E7C59] bg-[#3E7C59]/10 px-2 py-1 rounded-full font-medium flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Using search history
+                  </span>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('Clear your search history? This will reset your personalized recommendations.')) {
+                        clearSearchHistory();
+                        setHasSearchHistory(false);
+                        // Refresh recommendations
+                        const recommended = getRecommendedProducts(products, 8, recommendationFilter);
+                        setRecommendedProducts(recommended);
+                      }
+                    }}
+                    className="ml-3 text-sm text-gray-600 hover:text-[#3E7C59] flex items-center transition-colors duration-200 border border-gray-200 hover:border-[#3E7C59] rounded-md px-2 py-1"
+                    aria-label="Clear search history"
+                    title="Clear your search history"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Clear History
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -599,6 +613,16 @@ function Home() {
                       </span>
                     )}
                   </div>
+                  
+
+                  
+                  {/* Price tag in bottom left corner */}
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <span className="bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
+                      <DualCurrencyPrice amount={product.price} currency={product.currency} />
+                    </span>
+                  </div>
+                  
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                   <div className="absolute bottom-3 right-3 flex space-x-2">
                     <button 
@@ -622,7 +646,9 @@ function Home() {
                 <div className="px-1">
                   <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
                   <div className="flex justify-between items-center">
-                    <DualCurrencyPrice amount={product.price} currency={product.currency} />
+                    <p className="text-xs text-gray-500 line-clamp-1">
+                      {product.seller || 'Local Artisan'}
+                    </p>
                     <div className="flex items-center text-amber-400 text-xs">
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
