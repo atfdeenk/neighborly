@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useState, useRef, Suspense } from "react";
-import Navbar from "../components/Navbar";
-import FlashSaleTimer from "../components/FlashSaleTimer";
+import { useState, useEffect, useRef, CSSProperties, Suspense } from 'react';
+import { fetchProducts } from '@/lib/api';
+import { getSearchHistory, getRecommendedProducts } from '@/utils/searchHistory';
+import FlashSaleTimer from '@/components/FlashSaleTimer';
+import DualCurrencyPrice from '@/components/DualCurrencyPrice';
+import "../styles/arrowPulse.css";
 import Footer from "../components/Footer";
 import CategoryMenu from "../components/CategoryMenu";
 import ProductGrid from "../components/ProductGrid";
 import ProductCard from "../components/ProductCard";
 import Testimonials from "../components/Testimonials";
-import { fetchProducts } from "../lib/api";
-import { getRecommendedProducts, getSearchHistory } from "../utils/searchHistory";
-import "../styles/arrowPulse.css";
+import Navbar from "../components/Navbar";
 
 const bannerImages = [
   // Vibrant farmers market with fresh produce and local sellers
@@ -108,27 +109,41 @@ function Home() {
   const [hasSearchHistory, setHasSearchHistory] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [flashSaleStartIdx, setFlashSaleStartIdx] = useState(0);
+  const [recommendedStartIdx, setRecommendedStartIdx] = useState(0);
   const flashSaleVisibleCount = 3;
+  const recommendedVisibleCount = 4;
   const [lastUsedArrow, setLastUsedArrow] = useState<'prev' | 'next' | null>(null);
 
-  // Responsive carousel transform effect (must be after flashSaleStartIdx)
-  const [carouselTransformStyle, setCarouselTransformStyle] = useState<React.CSSProperties>({});
+  // Carousel transform styles for different sections
+  const [flashSaleCarouselStyle, setFlashSaleCarouselStyle] = useState<CSSProperties>({});
+  const [recommendedCarouselStyle, setRecommendedCarouselStyle] = useState<CSSProperties>({});
+  
+  // Update carousel transform styles when indices change
   useEffect(() => {
-    function updateTransform() {
-      if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+    const updateTransform = () => {
+      if (window.innerWidth >= 640) { // sm breakpoint
         // sm: 240px + 16px gap, md: 280px + 24px gap
         let cardWidth = 240, gap = 16;
         if (window.innerWidth >= 768) { cardWidth = 280; gap = 24; }
-        setCarouselTransformStyle({ transform: `translateX(-${flashSaleStartIdx * (cardWidth + gap)}px)` });
+        
+        setFlashSaleCarouselStyle({
+          transform: `translateX(-${flashSaleStartIdx * (cardWidth + gap)}px)`
+        });
+        
+        setRecommendedCarouselStyle({
+          transform: `translateX(-${recommendedStartIdx * (cardWidth + gap)}px)`
+        });
       } else {
-        setCarouselTransformStyle({}); // Mobile: native scroll
+        // Mobile: native scroll
+        setFlashSaleCarouselStyle({});
+        setRecommendedCarouselStyle({});
       }
-    }
+    };
+    
     updateTransform();
     window.addEventListener('resize', updateTransform);
     return () => window.removeEventListener('resize', updateTransform);
-  }, [flashSaleStartIdx]);
-
+  }, [flashSaleStartIdx, recommendedStartIdx]);
 
   // Banner carousel state (MUST be inside component)
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -140,14 +155,28 @@ function Home() {
   }, []);
 
   const handleFlashSalePrev = () => {
-    setFlashSaleStartIdx((idx) => Math.max(0, idx - flashSaleVisibleCount));
-    setLastUsedArrow('prev');
-  };
-  const handleFlashSaleNext = () => {
-    setFlashSaleStartIdx((idx) => Math.min(flashSaleProducts.length - flashSaleVisibleCount, idx + flashSaleVisibleCount));
-    setLastUsedArrow('next');
+    if (flashSaleStartIdx > 0) {
+      setFlashSaleStartIdx(flashSaleStartIdx - 1);
+    }
   };
 
+  const handleFlashSaleNext = () => {
+    if (flashSaleStartIdx + flashSaleVisibleCount < flashSaleProducts.length) {
+      setFlashSaleStartIdx(flashSaleStartIdx + 1);
+    }
+  };
+
+  const handleRecommendedPrev = () => {
+    if (recommendedStartIdx > 0) {
+      setRecommendedStartIdx(recommendedStartIdx - 1);
+    }
+  };
+
+  const handleRecommendedNext = () => {
+    if (recommendedStartIdx + recommendedVisibleCount < recommendedProducts.length) {
+      setRecommendedStartIdx(recommendedStartIdx + 1);
+    }
+  };
 
   useEffect(() => {
     setFlashSaleStartIdx(0);
@@ -465,125 +494,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Picks Inspired by Your Shopping - Etsy-inspired */}
-      <section id="featured" className="py-16 px-4 max-w-6xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Picks Inspired by Your Shopping</h2>
-            <p className="text-gray-500">Personalized recommendations based on your browsing</p>
-          </div>
-          <div className="mt-3 md:mt-0 flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
-                aria-label="Previous recommendations"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
-              </button>
-              <button
-                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
-                aria-label="Next recommendations"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
-              </button>
-            </div>
-            <a href="/products" className="text-[#3E7C59] hover:text-[#2D5B41] font-medium flex items-center transition-colors duration-200">
-              See all picks
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
-        </div>
-        
-        {/* Recommendation Categories */}
-        <div className="flex overflow-x-auto scrollbar-hide space-x-3 py-2 px-1 -mx-1 mb-6">
-          <button className="whitespace-nowrap bg-[#3E7C59] text-white text-sm font-medium px-4 py-2 rounded-full">
-            For You
-          </button>
-          <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
-            Based on Your Searches
-          </button>
-          <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
-            Similar to Items You've Viewed
-          </button>
-          <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
-            From Shops You Follow
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
-          {(products.filter((p: any) => p.featured).length > 0
-            ? products.filter((p: any) => p.featured).slice(0,8)
-            : products.slice(0,8)
-          ).map((product: any) => (
-            <div key={product.id} className="group">
-              <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
-                <img 
-                  src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80'} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                {product.category && (
-                  <span className="absolute top-2 left-2 bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
-                    {product.category}
-                  </span>
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                <div className="absolute bottom-3 right-3 flex space-x-2">
-                  <button 
-                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
-                    aria-label={`Add ${product.name} to favorites`}
-                  >
-                    <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
-                  <button 
-                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75"
-                    aria-label={`Add ${product.name} to cart`}
-                  >
-                    <svg className="w-5 h-5 text-gray-600 hover:text-[#3E7C59] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="px-1">
-                <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold text-gray-900">
-                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
-                  </span>
-                  <div className="flex items-center text-amber-400 text-xs">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="ml-1 text-xs text-gray-500">4.8</span>
-                  </div>
-                </div>
-                {product.seller && (
-                  <div className="flex items-center">
-                    <span className="text-xs text-gray-500 truncate">By {product.seller}</span>
-                    {Math.random() > 0.5 && (
-                      <span className="ml-2 text-xs text-[#3E7C59] font-medium">FREE shipping</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="flex justify-center mt-10">
-          <a
-            href="/products"
-            className="bg-white text-gray-800 font-medium px-8 py-3.5 rounded-full border border-gray-300 hover:border-[#3E7C59] hover:text-[#3E7C59] transition-all duration-200 shadow-sm hover:shadow"
-          >
-            Browse All Products
-          </a>
-        </div>
-      </section>
+
 
       {/* Visual Separator */}
       <div className="max-w-6xl mx-auto px-4">
@@ -618,58 +529,102 @@ function Home() {
           </a>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
-          {recommendedProducts.map((product) => (
-            <div 
-              key={product.id} 
-              className="group"
-            >
-              <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <span className="absolute top-2 left-2 bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
-                  {product.category}
-                </span>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                <div className="absolute bottom-3 right-3 flex space-x-2">
-                  <button 
-                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
-                    aria-label={`Add ${product.name} to favorites`}
-                  >
-                    <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
-                  <button 
-                    className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75"
-                    aria-label={`Add ${product.name} to cart`}
-                  >
-                    <svg className="w-5 h-5 text-gray-600 hover:text-[#3E7C59] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                  </button>
+        {/* Recommendation Categories */}
+        <div className="relative mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex overflow-x-auto scrollbar-hide space-x-3 py-2 px-1 -mx-1">
+              <button className="whitespace-nowrap bg-[#3E7C59] text-white text-sm font-medium px-4 py-2 rounded-full">
+                For You
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Based on Searches
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Recently Viewed
+              </button>
+              <button className="whitespace-nowrap bg-white border border-gray-200 text-gray-700 hover:border-[#3E7C59] hover:text-[#3E7C59] text-sm font-medium px-4 py-2 rounded-full transition-colors duration-200">
+                Similar Items
+              </button>
+            </div>
+            
+            <div className="hidden sm:flex gap-2 ml-4">
+              <button
+                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 disabled:opacity-40 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
+                onClick={handleRecommendedPrev}
+                aria-label="Previous"
+                disabled={recommendedStartIdx === 0}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <button
+                className="bg-white border border-gray-200 shadow-sm rounded-full p-2.5 transition-all duration-200 disabled:opacity-40 hover:border-[#3E7C59] hover:text-[#3E7C59] focus:outline-none focus:border-[#3E7C59] focus:text-[#3E7C59]"
+                onClick={handleRecommendedNext}
+                aria-label="Next"
+                disabled={recommendedStartIdx + recommendedVisibleCount >= recommendedProducts.length}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Recommendations Carousel */}
+        <div className="overflow-x-auto scrollbar-hide pb-4">
+          <div
+            className="flex gap-5 transition-transform duration-500 ease-in-out"
+            style={recommendedCarouselStyle}
+          >
+            {recommendedProducts.map((product, idx) => (
+              <div key={product.id + '-' + idx} className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group">
+                <div className="relative rounded-lg overflow-hidden bg-gray-100 mb-3 aspect-square">
+                  <img 
+                    src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80'} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute top-2 left-2 flex flex-col gap-2">
+                    {product.category && (
+                      <span className="bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
+                        {product.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
+                  <div className="absolute bottom-3 right-3 flex space-x-2">
+                    <button 
+                      className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+                      aria-label={`Add ${product.name} to favorites`}
+                    >
+                      <svg className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="bg-white rounded-full p-2 shadow-md opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75"
+                      aria-label={`Add ${product.name} to cart`}
+                    >
+                      <svg className="w-5 h-5 text-gray-600 hover:text-[#3E7C59] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="px-1">
-                <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-900">
-                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
-                  </span>
-                  <div className="flex items-center text-amber-400 text-xs">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="ml-1 text-xs text-gray-500">4.9</span>
+                <div className="px-1">
+                  <h3 className="font-medium text-gray-800 mb-1 truncate group-hover:text-[#3E7C59] transition-colors duration-200">{product.name}</h3>
+                  <div className="flex justify-between items-center">
+                    <DualCurrencyPrice amount={product.price} currency={product.currency} />
+                    <div className="flex items-center text-amber-400 text-xs">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="ml-1 text-xs text-gray-500">4.9</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
       
@@ -742,7 +697,7 @@ function Home() {
         <div className="overflow-x-auto scrollbar-hide pb-4">
           <div
             className="flex gap-5 transition-transform duration-500 ease-in-out"
-            style={carouselTransformStyle}
+            style={flashSaleCarouselStyle}
           >
             {flashSaleProducts.map((product: any, idx: number) => (
               <div key={product.id + '-' + idx} className="min-w-[220px] max-w-[220px] sm:min-w-[260px] sm:max-w-[260px] md:min-w-[280px] md:max-w-[280px] flex-shrink-0 group">
@@ -753,9 +708,6 @@ function Home() {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute top-2 left-2 flex flex-col gap-2">
-                    <span className="bg-[#A61B1B] text-white text-xs font-bold px-2.5 py-1.5 rounded">
-                      SALE
-                    </span>
                     {product.category && (
                       <span className="bg-white/90 text-xs text-gray-700 px-2 py-1 rounded-full font-medium">
                         {product.category}
